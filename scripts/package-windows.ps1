@@ -131,6 +131,7 @@ Sharing needs a reachable connection service; no public service is provisioned.
     Move-Item -LiteralPath $stagedChecksum -Destination $checksumPath
     if ($env:GITHUB_OUTPUT) {
         "version=$version" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding utf8
+        "release_tag=v$releaseVersion" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding utf8
     }
     Write-Output "Created $zipPath"
     Write-Output "SHA-256 $hash"

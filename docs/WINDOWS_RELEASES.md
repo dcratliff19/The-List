@@ -20,10 +20,12 @@ This is a folder-based package, without an installer, code signature, or automat
 
 1. Push the project to a GitHub repository, including `native/pubspec.lock`, `native/vendor/`, documentation, screenshots, and `scripts/`. Do not commit local data or signing credentials.
 2. Ensure Actions is enabled and the workflow exists on the default branch.
-3. Open **Actions → Windows release → Run workflow**, select the desired branch, and run it.
-4. After a successful run, download **The-List-Windows-x64** from the run's **Artifacts** section. Extract the artifact wrapper ZIP to find the application ZIP and checksum.
+3. Set an unused semantic version in `native/pubspec.yaml`, commit/push it, then open **Actions → Windows release → Run workflow** and select that branch.
+4. After a successful run, open **Releases** to download the automatically published Windows ZIP and checksum. The version tag is created at the exact commit built by the workflow when it does not exist yet.
 
-A manual branch run does not create or publish a GitHub release. Artifacts are retained for 30 days, subject to repository/organization limits. A manual run against a version tag also follows the tagged-release behavior below.
+A manual run publishes automatically after the build, tests, and packaging succeed; there is no draft approval step. A version such as `1.2.0+5` produces release `v1.2.0`. Existing tags must identify the built commit, and published releases are not overwritten. Increment the semantic version for another release; changing only the `+` build number does not produce a new release tag.
+
+The **The-List-Windows-x64** artifact is also available from the run for 30 days, subject to repository/organization limits. Extract that artifact's wrapper ZIP to find the application ZIP and checksum. General **Native builds** remains a CI workflow that uploads artifacts; use **Windows release** to publish.
 
 The build runs locked dependency resolution, Dart formatting checks, `flutter analyze`, `flutter test --reporter expanded`, and `flutter build windows --release --no-pub`. Packaging fails if required runtime files or guide images are missing. The workflow pins Flutter 3.47.5 and GitHub's `windows-2022` runner with Visual Studio 2022. Update these choices consistently with `.github/workflows/build.yml` when changing toolchains.
 
@@ -31,7 +33,7 @@ The vendored Windows notification plugin uses C++17 and SDK-provided C++/WinRT h
 
 ## Prepare a tagged release
 
-1. Set the intended version in `native/pubspec.yaml`, update the user-facing version labels if needed, and commit the finished changes. Run a manual build first when practical.
+1. Set the intended version in `native/pubspec.yaml`, update the user-facing version labels if needed, and commit the finished changes. Perform local checks before pushing the release tag; successful manual Windows release runs also publish.
 2. Create and push an annotated tag matching the semantic part of the app version. For `1.2.0+5`, use `v1.2.0`:
 
    ```sh
@@ -42,13 +44,12 @@ The vendored Windows notification plugin uses C++17 and SDK-provided C++/WinRT h
    Use the version you are actually releasing; the commands above are an example. A tag such as `v1.2.1` fails when pubspec still says `1.2.0+5`. A prerelease such as `1.3.0-beta.1+6` uses `v1.3.0-beta.1`.
 
 3. The tag starts **Windows release**. General **Native builds** runs on branch pushes, pull requests, and manual runs; tag packaging is handled by this dedicated workflow.
-4. After the build succeeds, a separate job creates a **draft** release with the ZIP and checksum. Its write permission is limited to that job. No separate personal access token is required; it uses the repository's `GITHUB_TOKEN`.
-5. Review the draft, replace the initial packaging notes with useful change notes, mark it as a prerelease if appropriate, and smoke-test the downloaded ZIP on Windows. Check launch, photos, reminders, and the configuration relevant to your users.
-6. Publish the draft when it is ready. Users can then download its assets from the repository's Releases page.
+4. After the build succeeds, a separate job **publishes** the release with its Windows ZIP and SHA-256 checksum. Its write permission is limited to that job, using the repository's `GITHUB_TOKEN`; no separate personal access token is required.
+5. Versions with a prerelease suffix, such as `1.3.0-beta.1+6`, publish as prereleases and are not marked Latest. Stable versions publish as normal releases. Installation notes are included automatically; you can edit the published release's notes to add change details.
 
-A rerun can refresh assets on the same draft. It refuses to replace an already published release. Do not move a published version tag or silently substitute different bytes for the same published release; increment the app version and use a new tag.
+An existing draft can be completed automatically: assets are uploaded before publication. If upload fails, the draft stays unpublished. The publisher verifies the ZIP checksum and rejects a tag pointing to another commit or an already published release. Publication jobs for the same release tag are serialized. Do not move a published version tag or substitute different bytes for it; increment the semantic app version and use a new tag.
 
-Organization policies can restrict Actions or token write access. If the draft job fails for that reason, the build artifact remains available; resolve the repository policy or attach the verified ZIP/checksum to a release manually.
+Organization policies can restrict Actions, tag creation, or token write access. If publishing fails for that reason, the build artifact remains available; resolve the repository policy or attach the verified ZIP/checksum to a release manually.
 
 ## Optional bundled sharing address
 
@@ -126,4 +127,5 @@ For Linux capture registration, run `sh native/linux/install-capture.sh /absolut
 - [Flutter setup action](https://github.com/subosito/flutter-action)
 - [GitHub workflow syntax and token permissions](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
 - [GitHub artifact upload action](https://github.com/actions/upload-artifact)
-- [GitHub CLI draft release creation](https://cli.github.com/manual/gh_release_create)
+- [GitHub CLI release creation](https://cli.github.com/manual/gh_release_create)
+- [GitHub CLI draft publication](https://cli.github.com/manual/gh_release_edit)

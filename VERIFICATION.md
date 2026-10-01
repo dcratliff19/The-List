@@ -2,6 +2,33 @@
 
 Flutter 3.47.5 / Dart 3.13.4 on Windows. Native implementation in `native/`.
 
+## Automatic GitHub release publication
+
+Updated Windows release automation at the user's request to publish after a
+successful build. Both manual runs and matching version-tag pushes publish the
+Windows ZIP and checksum. A manual run creates a missing semantic-version tag
+at the exact built commit. Prerelease versions retain prerelease status and do
+not become Latest. Existing drafts publish only after asset upload succeeds;
+already published releases and mismatched tag/commit pairs are rejected.
+
+Publishing is a separate job requiring the successful build, with write access
+limited to that job and concurrency scoped to the release tag. The publisher
+verifies the archive checksum and resolves annotated tags to their commit.
+README and release instructions now describe automatic publication.
+
+Validated 15 publication cases using real local Git commits/lightweight/annotated
+tags and a fully mocked GitHub CLI: new stable release, matching existing tag,
+draft completion, published-release rejection, upload/create/publish failures,
+wrong version, invalid commit input, missing asset, checksum mismatch, conflicting
+tag revision, annotated-tag commit resolution, and new/existing prereleases.
+No remote mutation was performed. Both workflows passed actionlint and Prettier;
+publication/package/run scripts parsed as PowerShell. App code was unchanged in
+this publication update; the Windows/Linux 35-test results below still apply.
+
+Actual GitHub creation/upload/publication remains to be confirmed by a successful
+Windows release run after these files are pushed. General Native builds continues
+to upload CI artifacts; it does not publish releases.
+
 ## CI failure fixes — Linux/macOS widget fonts and Windows compiler
 
 The reported GitHub test summary contained five failing widget cases. Reproduced

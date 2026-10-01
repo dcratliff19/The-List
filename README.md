@@ -72,7 +72,7 @@ Pop-Location
 ./scripts/package-windows.ps1
 ```
 
-The [Windows release workflow](.github/workflows/windows-release.yml) runs the app checks, builds the x64 runtime, and creates a versioned ZIP and SHA-256 checksum. Manual runs upload downloadable artifacts. A matching version tag also prepares a **draft** GitHub release. See [release instructions](docs/WINDOWS_RELEASES.md) for tagging, endpoint configuration, and publication.
+The [Windows release workflow](.github/workflows/windows-release.yml) runs the app checks, builds the x64 runtime, and creates a versioned ZIP and SHA-256 checksum. Successful manual runs and matching version-tag builds **automatically publish a GitHub release** with both files. Manual runs create a missing version tag at the exact built commit; prerelease versions publish as prereleases. See [release instructions](docs/WINDOWS_RELEASES.md) for versioning, endpoint configuration, and publication.
 
 Other platform commands, run from `native/`:
 
@@ -120,7 +120,7 @@ Reminders and read/unread state are personal to each device. Turning off sharing
 | `server/`            | Node signaling service, tests, and deployment configuration             |
 | `browser-extension/` | Unpacked Chrome/Edge capture extension                                  |
 | `docs/`              | Illustrated user guide and Windows release instructions                 |
-| `scripts/`           | Windows release packaging                                               |
+| `scripts/`           | Windows release packaging and publication                               |
 | `.github/workflows/` | Build checks and release automation                                     |
 | `screenshots/`       | App screenshots and Flutter widget renders                              |
 
