@@ -1,0 +1,27 @@
+services:
+  signal:
+    build: .
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5174
+      STATE_FILE: /app/state/rooms.json
+      TRUST_PROXY: "true"
+      ICE_SERVERS_URL: ${ICE_SERVERS_URL:?Set the provider credentials API URL}
+    volumes: ["signal_state:/app/state"]
+    expose: ["5174"]
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      SIGNAL_DOMAIN: ${SIGNAL_DOMAIN:?Set SIGNAL_DOMAIN}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [signal]
+volumes:
+  signal_state:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,19 @@
+services:
+  signal:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5174:5174"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5174
+      STATE_FILE: /app/state/rooms.json
+    volumes:
+      - signal_state:/app/state
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5174/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  signal_state:

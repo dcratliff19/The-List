@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Save to The List",
+  "version": "1.0.0",
+  "description": "Review the current page in The List before saving.",
+  "permissions": ["activeTab"],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

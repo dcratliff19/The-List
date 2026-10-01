@@ -1,0 +1,3 @@
+Windows: open The List > Settings > Enable browser capture. In Edge or Chrome, open Extensions, enable Developer mode, choose Load unpacked, and select this folder. Pin Save to The List. Click it on a web page, then Review in The List. Saving always requires choosing a destination and confirming. Keep the app in the registered location; enable capture again if you move it.
+macOS: the app bundle registers the URL scheme. Build/install the native Mac app first, then load the extension as above.
+iPhone fallback: create a Share Sheet shortcut that accepts Safari URLs, URL-encodes the URL, prefixes thelist-capture://save?url=, and uses Open URLs. A signed app and device validation are required.

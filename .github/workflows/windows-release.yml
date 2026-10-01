@@ -1,0 +1,121 @@
+name: Windows release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    outputs:
+      app_version: ${{ steps.package.outputs.version }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate the release version
+        env:
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
+        run: ./scripts/package-windows.ps1 -Tag $env:RELEASE_TAG -ValidateOnly
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+      - name: Resolve locked dependencies
+        working-directory: native
+        run: flutter pub get --enforce-lockfile
+      - name: Check Dart formatting
+        working-directory: native
+        run: dart format --output=none --set-exit-if-changed lib test integration_test tools test_driver
+      - name: Analyze the app
+        working-directory: native
+        run: flutter analyze
+      - name: Test the app
+        working-directory: native
+        run: flutter test
+      - name: Compile Windows x64
+        working-directory: native
+        env:
+          THE_LIST_SIGNAL_URL: ${{ vars.THE_LIST_SIGNAL_URL }}
+        run: |
+          $arguments = @('build', 'windows', '--release', '--no-pub')
+          if ($env:THE_LIST_SIGNAL_URL) {
+            $endpoint = $null
+            if (-not [Uri]::TryCreate($env:THE_LIST_SIGNAL_URL, [UriKind]::Absolute, [ref]$endpoint) -or
+                $endpoint.Scheme -ne 'https' -or $endpoint.UserInfo -or $endpoint.Query -or $endpoint.Fragment) {
+              throw 'THE_LIST_SIGNAL_URL must be an HTTPS URL without credentials, query, or fragment.'
+            }
+            $arguments += "--dart-define=THE_LIST_SIGNAL_URL=$env:THE_LIST_SIGNAL_URL"
+          }
+          & flutter @arguments
+          if ($LASTEXITCODE -ne 0) { throw 'Windows compilation failed.' }
+      - name: Package the runtime and illustrated guide
+        id: package
+        run: ./scripts/package-windows.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: The-List-Windows-x64
+          path: |
+            dist/*.zip
+            dist/*.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+  draft-release:
+    # Manual branch builds produce artifacts. Only a version tag prepares a draft.
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: windows-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: The-List-Windows-x64
+          path: dist
+      - name: Prepare or refresh the draft release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          APP_VERSION: ${{ needs.build.outputs.app_version }}
+        run: |
+          $assets = @(Get-ChildItem -LiteralPath dist -File | Where-Object { $_.Name -match '\.zip(?:\.sha256)?$' } | ForEach-Object FullName)
+          if ($assets.Count -ne 2) { throw 'Expected one Windows ZIP and one checksum.' }
+          $existingJson = & gh release view $env:RELEASE_TAG --json isDraft 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            $existing = $existingJson | ConvertFrom-Json
+            if (-not $existing.isDraft) { throw 'Refusing to replace assets on an already published release.' }
+            & gh release upload $env:RELEASE_TAG @assets --clobber
+          } else {
+            @"
+          Windows x64 build of The List $env:APP_VERSION.
+
+          Extract the full ZIP and run the_list.exe. Keep all DLLs and data/ beside it.
+          The ZIP includes the illustrated user guide and browser capture extension.
+          Install Microsoft's x64 Visual C++ Redistributable if the runtime is missing:
+          https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist
+
+          This folder-based package has no installer, auto-updater, or code signature.
+          Sharing requires a separately configured connection service.
+          Export a backup before upgrading; Settings shows the workspace location.
+
+          Maintainer: review the changes and smoke-test this ZIP before publishing.
+          "@ | Set-Content -LiteralPath release-notes.md -Encoding utf8
+            & gh release create $env:RELEASE_TAG @assets --verify-tag --draft --title "The List $env:RELEASE_TAG" --notes-file release-notes.md
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'Preparing the draft GitHub release failed.' }

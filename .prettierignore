@@ -1,0 +1,10 @@
+**/node_modules/
+**/build/
+**/.dart_tool/
+native/vendor/
+server/state/
+planning/
+releases/
+screenshots/
+collections/
+.review-backup/

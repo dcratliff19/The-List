@@ -1,0 +1,101 @@
+name: Native builds
+# Version tags are packaged by windows-release.yml; branch CI covers all targets.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows
+            output: native/build/windows/x64/runner/Release
+          - os: ubuntu-24.04
+            target: linux
+            output: native/build/linux/x64/release/bundle
+          - os: macos-latest
+            target: macos
+            output: native/build/macos/Build/Products/Release
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libsecret-1-dev libstdc++-12-dev
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test integration_test tools test_driver
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build ${{ matrix.target }} --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: The-List-${{ matrix.target }}
+          path: ${{ matrix.output }}
+  android:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          cache: true
+      - run: flutter pub get
+      - run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: The-List-Android-development-signed
+          path: native/build/app/outputs/flutter-apk/app-release.apk
+  ios:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          cache: true
+      - run: flutter pub get
+      - run: flutter build ios --release --no-codesign
+      - uses: actions/upload-artifact@v4
+        with:
+          name: The-List-iOS-unsigned
+          path: native/build/ios/iphoneos
+  signaling:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts
+      - run: npm run format:check
+      - run: npm test
+      - run: node --check server.mjs
+      - run: node --check ../browser-extension/popup.js
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python ../native/tools/test_linux_reminder.py

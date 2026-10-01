@@ -1,0 +1,46 @@
+name: the_list
+description: Your project links, notes, photos and reminders. Local first, shared directly.
+publish_to: none
+version: 1.2.0+5
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  archive: ^4.3.0
+  sqlite3: ^3.1.6
+  path_provider: ^2.1.5
+  path: ^1.9.1
+  uuid: ^4.5.2
+  file_picker: ^10.3.10
+  url_launcher: ^6.3.2
+  http: ^1.6.0
+  html: ^0.15.6
+  image: ^4.8.0
+  crypto: ^3.0.7
+  cryptography: ^2.9.0
+  flutter_secure_storage: ^10.0.0
+  flutter_webrtc: ^1.4.0
+  flutter_local_notifications: ^21.0.0
+  timezone: ^0.11.0
+  pdf: ^3.13.1
+  app_links: ^7.2.1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/linux_reminder.py
+    - assets/icon.png
+    - assets/fonts/NotoSans-Regular.ttf
+
+
+dependency_overrides:
+  flutter_secure_storage_windows:
+    path: vendor/flutter_secure_storage_windows
+  flutter_local_notifications_windows:
+    path: vendor/flutter_local_notifications_windows

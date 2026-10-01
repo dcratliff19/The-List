@@ -1,0 +1,75 @@
+{
+  "scope": "All four feature releases approved by the user",
+  "rules": [
+    "Explicit board membership",
+    "Explicit purchase selection",
+    "No automatic project moves",
+    "Keep currencies separate"
+  ],
+  "milestones": [
+    {
+      "name": "Organize and plan",
+      "status": "implemented_tested",
+      "features": [
+        "tag suggestions and management",
+        "custom columns and ordering",
+        "checklists",
+        "budgets",
+        "quantities and purchase status",
+        "comparisons",
+        "templates"
+      ]
+    },
+    {
+      "name": "Capture anywhere",
+      "status": "implemented_pending_platform_validation",
+      "features": [
+        "share capture",
+        "inbox",
+        "bulk import",
+        "duplicates",
+        "iOS device validation"
+      ]
+    },
+    {
+      "name": "Work together",
+      "status": "implemented_native_and_docker_sync_tested",
+      "features": [
+        "people and connection status",
+        "assignments",
+        "comments",
+        "activity",
+        "conflict review",
+        "optional encrypted offline delivery"
+      ]
+    },
+    {
+      "name": "Recover and maintain",
+      "status": "implemented_tested",
+      "features": [
+        "recurring reminders",
+        "Today view",
+        "backup retention and verification",
+        "selective restore",
+        "project exports"
+      ]
+    }
+  ],
+  "external_validation": [
+    "iOS share extension target setup, signing and real iPhone validation require the user Mac",
+    "macOS and Linux native builds require their platform hosts",
+    "Public HTTPS/TURN acceptance requires a deployed domain and separate networks"
+  ],
+  "validated": [
+    "23 Flutter tests",
+    "Flutter analyze: no issues",
+    "5 server tests",
+    "Windows release launch with existing workspace",
+    "Windows native sync and offline delivery against Docker",
+    "Android release build and real share-intent emulator smoke test"
+  ],
+  "releases": {
+    "windows": "releases/The-List-Windows-Latest/the_list.exe",
+    "android": "releases/The-List-Android.apk"
+  }
+}

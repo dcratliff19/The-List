@@ -1,0 +1,48 @@
+services:
+  signal:
+    build: .
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5174
+      STATE_FILE: /app/state/rooms.json
+      TRUST_PROXY: "true"
+      TURN_URLS: turn:${TURN_DOMAIN}:3478?transport=udp,turn:${TURN_DOMAIN}:3478?transport=tcp
+      TURN_SECRET: ${TURN_SECRET:?Set a long random TURN_SECRET}
+    volumes: ["signal_state:/app/state"]
+    expose: ["5174"]
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      SIGNAL_DOMAIN: ${SIGNAL_DOMAIN:?Set SIGNAL_DOMAIN}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [signal]
+  turn:
+    image: coturn/coturn:4.6.3
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -n
+      - --log-file=stdout
+      - --listening-port=3478
+      - --min-port=49160
+      - --max-port=49200
+      - --fingerprint
+      - --use-auth-secret
+      - --static-auth-secret=${TURN_SECRET:?Set TURN_SECRET}
+      - --realm=${TURN_DOMAIN:?Set TURN_DOMAIN}
+      - --external-ip=${PUBLIC_IP:?Set PUBLIC_IP}
+      - --no-cli
+      - --no-multicast-peers
+      - --no-loopback-peers
+      - --user-quota=4
+      - --total-quota=100
+volumes:
+  signal_state:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Save to The List</title>
+    <style>
+      body {
+        width: 280px;
+        padding: 20px;
+        font: 15px system-ui;
+        background: #fafaf8;
+        color: #242235;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-top: 0;
+      }
+
+      button {
+        background: #5848d9;
+        color: white;
+        border: 0;
+        border-radius: 10px;
+        padding: 12px 20px;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.7;
+      }
+
+      p {
+        line-height: 1.5;
+        color: #5b5967;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>The List</h1>
+    <p>Save this page to a project or your inbox.</p>
+    <button id="save" type="button">Review in The List</button>
+    <p id="status" role="status" aria-live="polite"></p>
+    <script src="popup.js"></script>
+  </body>
+</html>
