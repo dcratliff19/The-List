@@ -25,7 +25,9 @@ This is a folder-based package, without an installer, code signature, or automat
 
 A manual branch run does not create or publish a GitHub release. Artifacts are retained for 30 days, subject to repository/organization limits. A manual run against a version tag also follows the tagged-release behavior below.
 
-The build runs locked dependency resolution, Dart formatting checks, `flutter analyze`, `flutter test`, and `flutter build windows --release --no-pub`. Packaging fails if required runtime files or guide images are missing. The workflow currently pins Flutter 3.47.5 and uses GitHub's Windows runner. Update the Flutter version consistently with `.github/workflows/build.yml` when changing SDKs.
+The build runs locked dependency resolution, Dart formatting checks, `flutter analyze`, `flutter test --reporter expanded`, and `flutter build windows --release --no-pub`. Packaging fails if required runtime files or guide images are missing. The workflow pins Flutter 3.47.5 and GitHub's `windows-2022` runner with Visual Studio 2022. Update these choices consistently with `.github/workflows/build.yml` when changing toolchains.
+
+The vendored Windows notification plugin uses C++17 and SDK-provided C++/WinRT headers. It has a plugin-only compatibility definition for the experimental coroutine deprecation error introduced in MSVC 14.51. This preserves compatibility with older SDK headers; migration to standard coroutines needs a coordinated SDK/plugin update. Both workflows use expanded test output so future failures include the exception and stack trace.
 
 ## Prepare a tagged release
 

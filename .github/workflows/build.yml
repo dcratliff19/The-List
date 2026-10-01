@@ -11,7 +11,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
+          # Keep native plugin builds on the validated Visual Studio 2022 image.
+          - os: windows-2022
             target: windows
             output: native/build/windows/x64/runner/Release
           - os: ubuntu-24.04
@@ -36,7 +37,7 @@ jobs:
       - run: flutter pub get
       - run: dart format --output=none --set-exit-if-changed lib test integration_test tools test_driver
       - run: flutter analyze
-      - run: flutter test
+      - run: flutter test --reporter expanded
       - run: flutter build ${{ matrix.target }} --release
       - uses: actions/upload-artifact@v4
         with:

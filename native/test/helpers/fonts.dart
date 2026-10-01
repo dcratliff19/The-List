@@ -1,8 +1,15 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
 
-/// Uses the app's real fonts so widget layout matches the desktop build.
+/// Loads real glyphs instead of Flutter's fixed-width Ahem test font.
 Future<void> loadTestFonts() async {
+  // Widget tests default to Android typography (Roboto), including on Linux
+  // and macOS. Use a bundled font for that family so CI needs no system fonts.
+  final text = FontLoader('Roboto')
+    ..addFont(rootBundle.load('assets/fonts/NotoSans-Regular.ttf'));
+  await text.load();
+
+  // Preserve the native Windows metrics used by the existing screenshots.
   if (Platform.isWindows) {
     final font = FontLoader('Segoe UI')
       ..addFont(
@@ -15,14 +22,6 @@ Future<void> loadTestFonts() async {
     await font.load();
   }
   final icons = FontLoader('MaterialIcons')
-    ..addFont(
-      Future.value(
-        ByteData.sublistView(
-          File(
-            'build/unit_test_assets/fonts/MaterialIcons-Regular.otf',
-          ).readAsBytesSync(),
-        ),
-      ),
-    );
+    ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
   await icons.load();
 }

@@ -15,7 +15,8 @@ concurrency:
 
 jobs:
   build:
-    runs-on: windows-latest
+    # Avoid silently switching the native compiler when windows-latest moves.
+    runs-on: windows-2022
     timeout-minutes: 45
     outputs:
       app_version: ${{ steps.package.outputs.version }}
@@ -44,7 +45,7 @@ jobs:
         run: flutter analyze
       - name: Test the app
         working-directory: native
-        run: flutter test
+        run: flutter test --reporter expanded
       - name: Compile Windows x64
         working-directory: native
         env:
@@ -77,7 +78,7 @@ jobs:
     # Manual branch builds produce artifacts. Only a version tag prepares a draft.
     if: startsWith(github.ref, 'refs/tags/')
     needs: build
-    runs-on: windows-latest
+    runs-on: windows-2022
     timeout-minutes: 10
     permissions:
       contents: write

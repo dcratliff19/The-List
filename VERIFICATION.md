@@ -2,6 +2,44 @@
 
 Flutter 3.47.5 / Dart 3.13.4 on Windows. Native implementation in `native/`.
 
+## CI failure fixes — Linux/macOS widget fonts and Windows compiler
+
+The reported GitHub test summary contained five failing widget cases. Reproduced
+all five on Linux under WSL with the original font helper: the first exceptions
+were RenderFlex overflows of 66 and 79 pixels. The helper loaded a real text font
+only on Windows; Linux and macOS widget tests used Flutter's fixed-width Ahem
+font with their default Android/Roboto typography.
+
+`native/test/helpers/fonts.dart` now loads the bundled Noto Sans font as Roboto
+on every host and obtains font/icon assets from the asset bundle. Windows keeps
+its Segoe UI font for existing screenshot metrics. The new font fixture regression
+checks that equal-length narrow/wide strings have proportional glyph widths.
+
+The reported Windows compilation used Visual Studio 18 / MSVC 14.51 and failed
+with STL1011 in the notification plugin's C++/WinRT headers. Added Microsoft's
+documented compatibility definition only to that vendored plugin's CMake target.
+Both Windows workflows now use `windows-2022` rather than a moving compiler
+image. The plugin retains C++17 for compatibility with older SDK headers; its
+coroutine migration needs a coordinated future SDK/plugin update. See
+[Microsoft's C++/WinRT issue](https://github.com/microsoft/cppwinrt/issues/1520).
+
+Both workflows use `flutter test --reporter expanded` to preserve exceptions and
+stack traces in future CI logs.
+
+| Verification | Result |
+| --- | --- |
+| Original Linux widget cases | All five reproduced as failures using the original helper in an isolated source copy. |
+| Fixed Linux suite | All 35 tests passed with Flutter 3.47.5 / Dart 3.13.4 under WSL. |
+| Fixed Windows suite | All 35 tests passed. |
+| App analysis | No issues found. |
+| Windows release | Rebuilt successfully with Visual Studio 2022; generated plugin project includes the compatibility definition. |
+| Workflow checks | Both workflows passed actionlint and Prettier. |
+
+The isolated Linux helper was restored after the reproduction. No app data was
+used in these checks. macOS execution and the updated GitHub-hosted builds still
+need a fresh run after the changes are pushed. The local Windows compiler is
+Visual Studio 2022; Visual Studio 18 was not available for a local compilation.
+
 ## GitHub documentation and Windows release packaging
 
 Prepared a GitHub-facing README, a roughly 4,500-word user guide with 12 actual

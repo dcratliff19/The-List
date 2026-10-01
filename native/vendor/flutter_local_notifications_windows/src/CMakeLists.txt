@@ -19,3 +19,12 @@ set_target_properties(flutter_local_notifications_windows PROPERTIES
 )
 
 target_compile_definitions(flutter_local_notifications_windows PUBLIC DART_SHARED_LIB)
+
+# C++/WinRT in supported Windows SDKs still includes experimental/coroutine
+# under C++17. MSVC 14.51 turns its deprecation into STL1011. Keep this
+# compatibility definition scoped to the vendored plugin, not the whole app.
+if(MSVC)
+  target_compile_definitions(flutter_local_notifications_windows PRIVATE
+    _SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
+  )
+endif()
