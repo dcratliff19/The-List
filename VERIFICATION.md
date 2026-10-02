@@ -2,6 +2,66 @@
 
 Flutter 3.47.5 / Dart 3.13.4 on Windows. Native implementation in `native/`.
 
+## GitHub release preparation — 2 October 2026
+
+Prepared app version `1.2.1+6` for release tag `v1.2.1`; GitHub's published
+`v1.2.0` remains unchanged. Updated the Settings label, guide, changelog, and
+version-specific release notes. The publisher uses the prepared notes for a new
+release, and packaging includes the architecture notes and changelog.
+
+The Windows release now requires passing server/extension/Linux-helper checks
+before compilation. Both Windows workflows run 16 committed publication
+regressions using isolated local Git repositories and a mocked GitHub CLI.
+These tests exercise tag/commit identity, checksums, publication failures,
+prereleases, drafts, and version-specific notes without remote mutations.
+Packaging also verifies that the Settings label matches the manifest.
+
+Locked dependency resolution, Dart formatting/analysis, all 47 app tests, all
+20 server tests, all 16 publication cases, 7 mocked SQLite preparation cases,
+and 5 Linux helper tests passed. Windows `1.2.1+6` compiled successfully, and
+both GitHub workflows passed actionlint and Prettier. Release artifacts are
+generated under ignored `dist/`; release-note sources remain tracked under
+`docs/releases/`. Failed-widget diagnostics are excluded from future commits.
+
+GitHub publication is left to the maintainer's push and manual workflow run.
+The manual workflow creates the new version tag at the checked-out build commit
+and publishes only after all required checks pass.
+
+## App-to-server maintainability refactor — 2 October 2026
+
+Separated process startup and theming, domain models/validation/search, SQLite
+schema and backup/conflict APIs, private workspace views/editors/features,
+reusable widgets, sync HTTP/encryption/framing/WebRTC components, preview
+networking, and workbook encoding. The signaling entry point now composes
+focused HTTP, protocol, persistence, relay, rate-limit, mailbox, and route modules.
+Existing public imports, version-1 database/backups, direct protocol 3, and
+offline protocols 2/3 remain compatible. No dependency upgrades were needed.
+
+Fixed logical-clock publication during transaction rollback, rejection of newer
+database schemas before mutation, sync restoration after disposal, malformed
+frame count/assembly limits, and room revocation during streamed mutations or
+relay lookups. Project/item queries now use SQLite filters and additive indexes.
+UI and peer sessions use Store APIs instead of SQL. The Docker image includes
+the new server modules and excludes development data from its context.
+
+| Verification | Result |
+| --- | --- |
+| Native unit/widget suite | All 47 tests passed on Windows, including the original 35 tests. |
+| Dart formatting and analysis | Formatting clean; no analysis issues. |
+| Real Windows sync integration | Passed: encrypted WebRTC, photos, edits, reconnection, permissions, comments, and offline delivery against a disposable loopback server and temporary workspaces. |
+| Windows release compilation | Built successfully. |
+| Server suite | All 20 tests passed on Node 24 locally and Node 22 in an isolated Linux container, including streamed-request and relay-lookup revocation races. |
+| JavaScript/workflow formatting | Prettier checks passed; browser extension syntax passed. |
+| Linux reminder helper | All 5 Python tests passed. |
+| Windows SQLite preparation | All 7 mocked regression cases passed. |
+| Server Docker image | Built and passed health, room creation, and pairing smoke checks as the non-root user, with external networking disabled and no host data mounted. |
+
+The refactor was exercised locally; no production deployment or release
+publication was performed. Apple/Android/Linux native builds, system notification
+acceptance, and public-network TURN acceptance were not rerun for this change.
+See [architecture and maintenance](docs/ARCHITECTURE.md) for ownership, invariants,
+module responsibilities, and validation commands.
+
 ## SQLite Windows CI download failure — 2 October 2026
 
 GitHub Windows release run 36866155461 failed before tests started: the SQLite

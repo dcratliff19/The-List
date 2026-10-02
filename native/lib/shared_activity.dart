@@ -2,6 +2,14 @@ part of 'store.dart';
 
 /// Keeps device-local access decisions and read receipts out of shared history.
 extension SharedActivity on Store {
+  String? projectAccess(String project, String room, bool host) {
+    final rows = db.select(
+      'SELECT access FROM project_access WHERE room=? AND project=? AND host=?',
+      [room, project, host ? 1 : 0],
+    );
+    return rows.isEmpty ? null : rows.first['access'] as String;
+  }
+
   bool canManageSharing(String project) => db.select(
     'SELECT room FROM project_access WHERE project=? AND host=0',
     [project],

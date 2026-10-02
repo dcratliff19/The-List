@@ -8,9 +8,9 @@
   },
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --test server.test.mjs",
-    "format": "prettier --write \"*.mjs\" package.json package-lock.json \"../browser-extension/*.{js,html,json}\" \"../.github/workflows/*.yml\" ../.prettierrc.json",
-    "format:check": "prettier --check \"*.mjs\" package.json package-lock.json \"../browser-extension/*.{js,html,json}\" \"../.github/workflows/*.yml\" ../.prettierrc.json"
+    "test": "node --test server.test.mjs \"test/*.test.mjs\"",
+    "format": "prettier --write \"**/*.mjs\" package.json package-lock.json \"../browser-extension/*.{js,html,json}\" \"../.github/workflows/*.yml\" ../.prettierrc.json",
+    "format:check": "prettier --check \"**/*.mjs\" package.json package-lock.json \"../browser-extension/*.{js,html,json}\" \"../.github/workflows/*.yml\" ../.prettierrc.json"
   },
   "devDependencies": {
     "prettier": "3.5.3"

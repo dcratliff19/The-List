@@ -67,7 +67,11 @@ if ($LASTEXITCODE -eq 0) {
     # gh creates the release, uploads its assets, and publishes it. --target
     # creates a missing tag at this commit rather than the default branch head.
     $notesPath = Join-Path $ArtifactDirectory 'release-notes.md'
-    @"
+    $versionNotes = Join-Path $PSScriptRoot "../docs/releases/$Tag.md"
+    if (Test-Path -LiteralPath $versionNotes -PathType Leaf) {
+        Copy-Item -LiteralPath $versionNotes -Destination $notesPath
+    } else {
+        @"
 Windows x64 build of The List $AppVersion.
 
 Extract the full ZIP and run the_list.exe. Keep all DLLs and data/ beside it.
@@ -79,6 +83,7 @@ This folder-based package has no installer, auto-updater, or code signature.
 Sharing requires a separately configured connection service.
 Export a backup before upgrading; Settings shows the workspace location.
 "@ | Set-Content -LiteralPath $notesPath -Encoding utf8
+    }
     $createArguments = @('release', 'create', $Tag) + $assets + @(
         '--target', $Commit, '--title', "The List $Tag", '--notes-file', $notesPath
     )

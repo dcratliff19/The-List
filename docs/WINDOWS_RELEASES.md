@@ -4,15 +4,15 @@ The dedicated workflow is `.github/workflows/windows-release.yml`. It builds an 
 
 ## What a run produces
 
-For `version: 1.2.0+5`, the outputs are:
+For `version: 1.2.1+6`, the outputs are:
 
 ```text
 dist/
-  The-List-1.2.0+5-Windows-x64.zip
-  The-List-1.2.0+5-Windows-x64.zip.sha256
+  The-List-1.2.1+6-Windows-x64.zip
+  The-List-1.2.1+6-Windows-x64.zip.sha256
 ```
 
-The ZIP has one application folder containing `the_list.exe`, all release DLLs/native assets, `data/`, `START-HERE.txt`, the illustrated guide and its sample screenshots, and the browser extension. It also includes deployment/verification notes and a root license file if the repository supplies one. It does not include a user's workspace, pairing keys, unrelated screenshots, or the signaling service executable.
+The ZIP has one application folder containing `the_list.exe`, all release DLLs/native assets, `data/`, `START-HERE.txt`, the illustrated guide and its sample screenshots, and the browser extension. It also includes the changelog, architecture/deployment/verification notes, and a root license file if the repository supplies one. It does not include a user's workspace, pairing keys, unrelated screenshots, or the signaling service executable.
 
 This is a folder-based package, without an installer, code signature, or automatic updater. Users extract the whole folder. Machines missing the Microsoft C++ runtime need the [x64 Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist). Add signing and installer infrastructure separately before describing a release as signed or installed.
 
@@ -23,13 +23,13 @@ This is a folder-based package, without an installer, code signature, or automat
 3. Set an unused semantic version in `native/pubspec.yaml`, commit/push it, then open **Actions → Windows release → Run workflow** and select that branch.
 4. After a successful run, open **Releases** to download the automatically published Windows ZIP and checksum. The version tag is created at the exact commit built by the workflow when it does not exist yet.
 
-A manual run publishes automatically after the build, tests, and packaging succeed; there is no draft approval step. A version such as `1.2.0+5` produces release `v1.2.0`. Existing tags must identify the built commit, and published releases are not overwritten. Increment the semantic version for another release; changing only the `+` build number does not produce a new release tag.
+A manual run publishes automatically after the build, tests, and packaging succeed; there is no draft approval step. A version such as `1.2.1+6` produces release `v1.2.1`. Existing tags must identify the built commit, and published releases are not overwritten. Increment the semantic version for another release; changing only the `+` build number does not produce a new release tag.
 
 For this manual flow, do not create a release or tag in GitHub first. The workflow creates both after the checks pass. Git can also create and push a tag without a release, using the commands below. If you use GitHub's release editor instead, save a draft and then run the workflow manually; publishing the release first makes the publisher reject that version as already published.
 
 The **The-List-Windows-x64** artifact is also available from the run for 30 days, subject to repository/organization limits. Extract that artifact's wrapper ZIP to find the application ZIP and checksum. General **Native builds** remains a CI workflow that uploads artifacts; use **Windows release** to publish.
 
-The build runs locked dependency resolution, Dart formatting checks, `flutter analyze`, `flutter test --reporter expanded`, and `flutter build windows --release --no-pub`. Packaging fails if required runtime files or guide images are missing. The workflow pins Flutter 3.47.5 and GitHub's `windows-2022` runner with Visual Studio 2022. Update these choices consistently with `.github/workflows/build.yml` when changing toolchains.
+The release first checks server formatting/tests, extension syntax, and the Linux reminder helper on Node 22/Linux. The Windows build then runs locked dependency resolution, mocked publication/SQLite safeguard tests, Dart formatting checks, `flutter analyze`, `flutter test --reporter expanded`, and `flutter build windows --release --no-pub`. Packaging fails if required runtime files or guide images are missing, or the Settings version label differs from the manifest. The workflow pins Flutter 3.47.5 and GitHub's `windows-2022` runner with Visual Studio 2022. Update these choices consistently with `.github/workflows/build.yml` when changing toolchains.
 
 The vendored Windows notification plugin uses C++17 and SDK-provided C++/WinRT headers. It has a plugin-only compatibility definition for the experimental coroutine deprecation error introduced in MSVC 14.51. This preserves compatibility with older SDK headers; migration to standard coroutines needs a coordinated SDK/plugin update. Both workflows use expanded test output so future failures include the exception and stack trace.
 
@@ -40,18 +40,18 @@ If **Test the app** reports a SQLite DLL hash mismatch before any tests run, tha
 ## Prepare a tagged release
 
 1. Set the intended version in `native/pubspec.yaml`, update the user-facing version labels if needed, and commit the finished changes. Perform local checks before pushing the release tag; successful manual Windows release runs also publish.
-2. Create and push an annotated tag matching the semantic part of the app version. For `1.2.0+5`, use `v1.2.0`:
+2. Create and push an annotated tag matching the semantic part of the app version. For `1.2.1+6`, use `v1.2.1`:
 
    ```sh
-   git tag -a v1.2.0 -m "The List 1.2.0"
-   git push origin v1.2.0
+   git tag -a v1.2.1 -m "The List 1.2.1"
+   git push origin v1.2.1
    ```
 
-   Use the version you are actually releasing; the commands above are an example. A tag such as `v1.2.1` fails when pubspec still says `1.2.0+5`. A prerelease such as `1.3.0-beta.1+6` uses `v1.3.0-beta.1`.
+   Use the version you are actually releasing; the commands above are an example. A tag such as `v1.2.2` fails when pubspec still says `1.2.1+6`. A prerelease such as `1.3.0-beta.1+6` uses `v1.3.0-beta.1`.
 
 3. The tag starts **Windows release**. General **Native builds** runs on branch pushes, pull requests, and manual runs; tag packaging is handled by this dedicated workflow.
 4. After the build succeeds, a separate job **publishes** the release with its Windows ZIP and SHA-256 checksum. Its write permission is limited to that job, using the repository's `GITHUB_TOKEN`; no separate personal access token is required.
-5. Versions with a prerelease suffix, such as `1.3.0-beta.1+6`, publish as prereleases and are not marked Latest. Stable versions publish as normal releases. Installation notes are included automatically; you can edit the published release's notes to add change details.
+5. Versions with a prerelease suffix, such as `1.3.0-beta.1+6`, publish as prereleases and are not marked Latest. Stable versions publish as normal releases. For a new release, the publisher uses `docs/releases/<tag>.md` when supplied, otherwise generic installation notes. Version-specific notes for `v1.2.1` are included in this checkout.
 
 An existing draft can be completed automatically: assets are uploaded before publication. If upload fails, the draft stays unpublished. The publisher verifies the ZIP checksum and rejects a tag pointing to another commit or an already published release. Publication jobs for the same release tag are serialized. Do not move a published version tag or substitute different bytes for it; increment the semantic app version and use a new tag.
 
@@ -87,7 +87,7 @@ Optional script arguments:
 
 ```powershell
 # Check a tag against the app manifest without compiling or packaging.
-./scripts/package-windows.ps1 -Tag v1.2.0 -ValidateOnly
+./scripts/package-windows.ps1 -Tag v1.2.1 -ValidateOnly
 
 # Use another output directory inside this checkout for a repeated local build.
 ./scripts/package-windows.ps1 -OutputDirectory ./dist/local-check
@@ -102,7 +102,7 @@ The repository contains a launcher intended for an older local `releases/` layou
 Put the application ZIP and its `.sha256` companion in the same folder. For the example version, use PowerShell:
 
 ```powershell
-$zip = './The-List-1.2.0+5-Windows-x64.zip'
+$zip = './The-List-1.2.1+6-Windows-x64.zip'
 $expected = ((Get-Content -LiteralPath "$zip.sha256" -Raw).Trim() -split '\s+')[0]
 $actual = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash
 if ($actual -ine $expected) { throw 'The ZIP checksum does not match.' }

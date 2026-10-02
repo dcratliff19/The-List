@@ -1,5 +1,5 @@
-releases/
-dist/
+/releases/
+/dist/
 planning/web-design-draft/
 **/.env
 **/.env.local
@@ -17,3 +17,4 @@ planning/web-design-draft/
 
 server/state/
 .review-backup/
+native/test/failures/

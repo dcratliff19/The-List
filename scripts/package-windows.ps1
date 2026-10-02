@@ -24,6 +24,11 @@ if (-not $versionMatch.Success) {
 }
 $version = $versionMatch.Groups[1].Value
 $releaseVersion = $version.Split('+')[0]
+$settings = Get-Content -LiteralPath (Join-Path $repositoryRoot 'native/lib/ui/editors/settings.dart') -Raw
+$displayVersion = [regex]::Match($settings, 'The List · (\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)')
+if (-not $displayVersion.Success -or $displayVersion.Groups[1].Value -cne $releaseVersion) {
+    throw 'The Settings version label must match the semantic version in native/pubspec.yaml.'
+}
 if ($Tag -and $Tag -cne "v$releaseVersion") {
     throw "Tag '$Tag' must match pubspec.yaml: v$releaseVersion (app version $version)."
 }
@@ -88,6 +93,8 @@ try {
     New-Item -ItemType Directory -Path $bundleDocs, $bundleImages | Out-Null
     Copy-Item -LiteralPath $guidePath -Destination $bundleDocs
     Copy-Item -LiteralPath (Join-Path $repositoryRoot 'docs/WINDOWS_RELEASES.md') -Destination $bundleDocs
+    Copy-Item -LiteralPath (Join-Path $repositoryRoot 'docs/ARCHITECTURE.md') -Destination $bundleDocs
+    Copy-Item -LiteralPath (Join-Path $repositoryRoot 'CHANGELOG.md') -Destination $bundlePath
     Copy-Item -LiteralPath (Join-Path $repositoryRoot 'VERIFICATION.md') -Destination $bundlePath
     Copy-Item -LiteralPath (Join-Path $repositoryRoot 'server/DEPLOYMENT.md') -Destination $bundleDocs
     # Adapt repository-only deployment links for the downloaded guide.

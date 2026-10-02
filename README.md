@@ -6,7 +6,7 @@ A native app for collecting project links, notes, photos, and reminders, with op
 
 _The actual Flutter interface, rendered with sample data. New installations start empty._
 
-[Illustrated user guide](docs/USER_GUIDE.md) · [Windows release builds](docs/WINDOWS_RELEASES.md) · [Sharing service deployment](server/DEPLOYMENT.md) · [Verification notes](VERIFICATION.md)
+[Illustrated user guide](docs/USER_GUIDE.md) · [Windows release builds](docs/WINDOWS_RELEASES.md) · [Changelog](CHANGELOG.md) · [Sharing service deployment](server/DEPLOYMENT.md) · [Architecture and maintenance](docs/ARCHITECTURE.md) · [Verification notes](VERIFICATION.md)
 
 ## Features
 

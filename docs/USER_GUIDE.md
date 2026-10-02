@@ -1,6 +1,6 @@
 # The List user guide
 
-This guide covers The List 1.2.0. It follows a small workspace project from saving the first idea through planning, sharing, and backup. The same steps work for research, shopping, travel, or a project with friends.
+This guide covers The List 1.2.1. It follows a small workspace project from saving the first idea through planning, sharing, and backup. The same steps work for research, shopping, travel, or a project with friends.
 
 The pictures show the actual app interface rendered with isolated sample data. Older pictures use a different example project or accent color. Phone pictures demonstrate the responsive layout; they are not photographs of an iPhone. Your installation starts empty.
 

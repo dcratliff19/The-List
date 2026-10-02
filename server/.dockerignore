@@ -1,0 +1,7 @@
+node_modules/
+state/
+.env*
+*.log
+*.test.mjs
+test/
+*.tmp

@@ -36,6 +36,86 @@ const iceResponse = () => ({
   json: async () => ({ iceServers: [{ urls: 'turn:relay.example:3478' }] }),
 });
 
+test('revocation rejects requests whose body was still streaming', { timeout: 5000 }, async (t) => {
+  for (const [endpoint, method, prefix, suffix] of [
+    ['mailbox', 'POST', '{"id":"pending","payload":"', 'encrypted"}'],
+    ['mailbox', 'DELETE', '{"ids":[', '"pending"]}'],
+    ['signals', 'POST', '{"type":"offer","sdp":"', 'test"}'],
+    ['access', 'PATCH', '{"access":"', 'read"}'],
+  ]) {
+    await t.test(`${method} ${endpoint}`, async (t) => {
+      const { call, origin, server } = await fixture(t);
+      const room = await data(await call('/rooms', 'POST'), 201);
+      const roomPath = `/rooms/${room.id}`;
+      // Observe body arrival instead of relying on a sleep to win the race.
+      const received = new Promise((resolve) => {
+        server.once('request', (request) => request.once('data', resolve));
+      });
+      let upload;
+      const result = new Promise((resolve, reject) => {
+        upload = http.request(
+          `${origin}${roomPath}/${endpoint}`,
+          {
+            method,
+            headers: {
+              authorization: `Bearer ${room.token}`,
+              'content-type': 'application/json',
+              'transfer-encoding': 'chunked',
+            },
+          },
+          (response) => {
+            response.resume();
+            response.on('end', () => resolve(response.statusCode));
+          },
+        );
+        upload.on('error', reject);
+        upload.write(prefix);
+      });
+      try {
+        await received;
+        await data(await call(roomPath, 'DELETE', room.token));
+        upload.end(suffix);
+        assert.equal(await result, 404);
+      } finally {
+        upload.destroy();
+      }
+    });
+  }
+});
+
+test('revocation while relay lookup is pending does not issue refreshed credentials', async (t) => {
+  let clock = 0;
+  let release;
+  let arrived;
+  const started = new Promise((resolve) => {
+    arrived = resolve;
+  });
+  const pending = new Promise((resolve) => {
+    release = resolve;
+  });
+  const { call } = await fixture(t, {
+    now: () => clock,
+    iceServersUrl: 'https://relay.example/ice',
+    fetchIce: async () => {
+      if (clock > 0) {
+        arrived();
+        await pending;
+      }
+      return iceResponse();
+    },
+  });
+  const room = await data(await call('/rooms', 'POST'), 201);
+  clock = 60000;
+  const refreshed = call(`/rooms/${room.id}/ice`, 'GET', room.token);
+  await started;
+  try {
+    await data(await call(`/rooms/${room.id}`, 'DELETE', room.token));
+  } finally {
+    release();
+  }
+  assert.equal((await refreshed).status, 404);
+});
+
 test('single-use invitations, isolated signaling, authentication, and revocation', async (t) => {
   const { call } = await fixture(t);
   const room = await data(await call('/rooms', 'POST'), 201);
