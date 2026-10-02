@@ -25,11 +25,17 @@ This is a folder-based package, without an installer, code signature, or automat
 
 A manual run publishes automatically after the build, tests, and packaging succeed; there is no draft approval step. A version such as `1.2.0+5` produces release `v1.2.0`. Existing tags must identify the built commit, and published releases are not overwritten. Increment the semantic version for another release; changing only the `+` build number does not produce a new release tag.
 
+For this manual flow, do not create a release or tag in GitHub first. The workflow creates both after the checks pass. Git can also create and push a tag without a release, using the commands below. If you use GitHub's release editor instead, save a draft and then run the workflow manually; publishing the release first makes the publisher reject that version as already published.
+
 The **The-List-Windows-x64** artifact is also available from the run for 30 days, subject to repository/organization limits. Extract that artifact's wrapper ZIP to find the application ZIP and checksum. General **Native builds** remains a CI workflow that uploads artifacts; use **Windows release** to publish.
 
 The build runs locked dependency resolution, Dart formatting checks, `flutter analyze`, `flutter test --reporter expanded`, and `flutter build windows --release --no-pub`. Packaging fails if required runtime files or guide images are missing. The workflow pins Flutter 3.47.5 and GitHub's `windows-2022` runner with Visual Studio 2022. Update these choices consistently with `.github/workflows/build.yml` when changing toolchains.
 
 The vendored Windows notification plugin uses C++17 and SDK-provided C++/WinRT headers. It has a plugin-only compatibility definition for the experimental coroutine deprecation error introduced in MSVC 14.51. This preserves compatibility with older SDK headers; migration to standard coroutines needs a coordinated SDK/plugin update. Both workflows use expanded test output so future failures include the exception and stack trace.
+
+Both Windows workflows run `scripts/prepare-sqlite-windows.ps1` after dependency resolution. It reads the installed, locked SQLite package's release tag and Windows x64 SHA-256 hash, downloads from that upstream release with HTTP error handling and bounded retries, and seeds Flutter's native-hook cache only after the checksum matches. The SQLite hook verifies that cache again. This avoids treating a failed download response as a DLL; hash verification remains enabled. The cache layout is tied to the pinned Flutter/Dart toolchain and should be checked when upgrading it.
+
+If **Test the app** reports a SQLite DLL hash mismatch before any tests run, that is a native-asset download failure, not a tag/release collision. Inspect the **Prepare verified SQLite runtime** step for HTTP or checksum errors. A persistent mismatch stops the build rather than accepting unexpected bytes.
 
 ## Prepare a tagged release
 

@@ -38,6 +38,10 @@ jobs:
       - name: Resolve locked dependencies
         working-directory: native
         run: flutter pub get --enforce-lockfile
+      - name: Check SQLite download safeguards
+        run: ./scripts/tests/prepare-sqlite-windows.tests.ps1
+      - name: Prepare verified SQLite runtime
+        run: ./scripts/prepare-sqlite-windows.ps1
       - name: Check Dart formatting
         working-directory: native
         run: dart format --output=none --set-exit-if-changed lib test integration_test tools test_driver

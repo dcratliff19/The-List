@@ -2,6 +2,28 @@
 
 Flutter 3.47.5 / Dart 3.13.4 on Windows. Native implementation in `native/`.
 
+## SQLite Windows CI download failure — 2 October 2026
+
+GitHub Windows release run 36866155461 failed before tests started: the SQLite
+3.5.2 hook received a DLL download with hash `bef140a1...`, while the locked package
+expected `2bf39f2a...`. Compilation and publication were skipped. A fresh upstream
+download matches the expected full hash and the GitHub release asset digest;
+the exact bytes returned to the failing runner are unavailable, so the specific
+network cause remains unconfirmed. All 35 tests pass locally with verified bytes.
+
+Added a Windows preparation script before Flutter tests in both workflows. It
+uses the locked package's own checksum, retries HTTP/checksum failures, and
+populates the hook's checksum-named cache only with verified bytes. No dependency
+upgrade or checksum bypass is needed. Verified a real download into an empty
+cache and confirmed the shared cache path against the Dart hook input. Seven
+mocked regression cases cover cold/warm cache, corrupt-cache replacement, HTTP
+and checksum retries, retry exhaustion, temporary-file cleanup, and mismatched
+package metadata. Both workflows run those regression checks on Windows.
+
+The release instructions now state that manual runs create their own tag/release;
+there is no need to publish a release before starting a build. Existing matching
+tags and drafts remain supported; published versions remain protected.
+
 ## Automatic GitHub release publication
 
 Updated Windows release automation at the user's request to publish after a
